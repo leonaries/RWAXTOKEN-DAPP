@@ -3,6 +3,7 @@
 import { BrandLogo } from "@/components/brand-logo";
 import type { LoginStatus } from "@/features/auth/login.types";
 import { WalletLoginModal } from "@/features/auth/wallet-login-modal";
+import { useThirdPartyLogin } from "@/hooks/auth";
 import { useWalletConnection } from "@/hooks/web3";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Mail, ShieldCheck } from "lucide-react";
 import Image from "next/image";
@@ -18,6 +19,11 @@ export function LoginPage() {
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [connectingWalletId, setConnectingWalletId] = useState<string>();
   const { address, availableWallets, connect, isConnecting } = useWalletConnection();
+  const {
+    error: thirdPartyLoginError,
+    handleGoogleLogin,
+    isGoogleLoading
+  } = useThirdPartyLogin();
 
   const canSendCode = useMemo(() => /\S+@\S+\.\S+/.test(email) && countdown === 0, [countdown, email]);
   const canSubmit = useMemo(() => /\S+@\S+\.\S+/.test(email) && code.trim().length >= 4, [code, email]);
@@ -80,8 +86,19 @@ export function LoginPage() {
     setStatus("error");
   };
 
-  const startGoogleAuth = () => {
-    window.location.href = "/api/auth/google";
+  useEffect(() => {
+    if (!thirdPartyLoginError) {
+      return;
+    }
+
+    setStatus("error");
+    setMessage(thirdPartyLoginError);
+  }, [thirdPartyLoginError]);
+
+  const startGoogleAuth = async () => {
+    setStatus("loading");
+    setMessage("正在获取 Google 授权链接...");
+    await handleGoogleLogin();
   };
 
   return (
@@ -212,11 +229,16 @@ export function LoginPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               className="flex h-[50px] items-center justify-center gap-2 rounded-lg bg-[#F3F3F3] text-base font-medium text-[#707070] transition hover:-translate-y-0.5 hover:text-ink hover:shadow-soft"
+              disabled={isGoogleLoading || status === "loading"}
               onClick={startGoogleAuth}
               type="button"
             >
-              <Image alt="" aria-hidden="true" className="h-5 w-5" height={20} src="/assets/icons/google.svg" width={20} />
-              Google
+              {isGoogleLoading || status === "loading" ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Image alt="" aria-hidden="true" className="h-5 w-5" height={20} src="/assets/icons/google.svg" width={20} />
+              )}
+              {isGoogleLoading || status === "loading" ? "Loading" : "Google"}
             </button>
             <button
               className="flex h-[50px] items-center justify-center gap-2 rounded-lg bg-[#F3F3F3] text-base font-medium text-[#707070] transition hover:-translate-y-0.5 hover:text-ink hover:shadow-soft"
