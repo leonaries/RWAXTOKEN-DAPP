@@ -4,8 +4,20 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f6f8;
-  --foreground: #07100c;
+  --color-ink: 7 9 13;
+  --color-graphite: 17 21 29;
+  --color-page: 245 247 245;
+  --color-surface: 255 255 255;
+  --color-muted-surface: 244 246 248;
+  --color-line: 223 229 234;
+  --color-accent: 52 245 111;
+  --color-cyan: 21 168 255;
+  --color-muted-text: 112 112 112;
+  --background: rgb(var(--color-page));
+  --foreground: rgb(var(--color-ink));
+  --font-sans:
+    "Satoshi", "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui,
+    sans-serif;
 }
 
 * {
@@ -22,13 +34,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family:
-    "Satoshi",
-    "SF Pro Display",
-    "PingFang SC",
-    "Microsoft YaHei",
-    system-ui,
-    sans-serif;
+  font-family: var(--font-sans);
 }
 
 button,
@@ -41,7 +47,7 @@ button {
 }
 
 ::selection {
-  background: rgba(52, 245, 111, 0.28);
+  background: rgb(var(--color-accent) / 0.28);
 }
 
 .grid-fade {
@@ -79,9 +85,9 @@ button {
   height: 28px;
   right: -12px;
   bottom: -12px;
-  background: #34f56f;
-  border-color: #34f56f;
-  box-shadow: 0 0 24px rgba(52, 245, 111, 0.55);
+  background: rgb(var(--color-accent));
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 24px rgb(var(--color-accent) / 0.55);
 }
 
 .animate-float-slow {

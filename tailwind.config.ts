@@ -9,16 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#07090d",
-        graphite: "#11151d",
-        mist: "#f4f6f8",
-        line: "#dfe5ea",
-        hnb: "#34f56f",
-        cyanweb: "#15a8ff"
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        graphite: "rgb(var(--color-graphite) / <alpha-value>)",
+        mist: "rgb(var(--color-muted-surface) / <alpha-value>)",
+        page: "rgb(var(--color-page) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        line: "rgb(var(--color-line) / <alpha-value>)",
+        hnb: "rgb(var(--color-accent) / <alpha-value>)",
+        cyanweb: "rgb(var(--color-cyan) / <alpha-value>)",
+        mutedText: "rgb(var(--color-muted-text) / <alpha-value>)"
+      },
+      fontFamily: {
+        sans: "var(--font-sans)"
       },
       boxShadow: {
-        glow: "0 0 36px rgba(52, 245, 111, 0.22)",
-        soft: "0 24px 80px rgba(8, 13, 21, 0.12)"
+        glow: "0 0 36px rgb(var(--color-accent) / 0.22)",
+        soft: "0 24px 80px rgb(var(--color-ink) / 0.12)"
       }
     }
   },

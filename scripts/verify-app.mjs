@@ -22,10 +22,11 @@ const routes = [
   {
     path: "/",
     name: "home",
-    selector: "text=RWAXTOKEN",
-    expectedText: "RWA Token 打新专区",
-    expectedBackground: "rgb(245, 247, 245)",
-    minHeroFontSize: 72
+    selector: "text=平台首页",
+    expectedText: "热门活动",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "平台首页",
+    minHeroFontSize: 24
   },
   {
     path: "/login",
@@ -33,6 +34,79 @@ const routes = [
     selector: "text=账号登录",
     expectedText: "邮箱登录",
     expectedBackground: "rgb(252, 252, 253)",
+    heroText: "账号登录",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/market",
+    name: "market",
+    selector: "text=全部商品",
+    expectedText: "热门品牌",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "全部商品",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/rwa-list",
+    name: "rwa-list",
+    selector: "text=RWA LIST",
+    expectedText: "RWA Token 打新专区",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "RWA LIST",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/rwa-list/launchpad",
+    name: "launchpad",
+    selector: "text=TOKEN 打新",
+    expectedText: "RWA Token 打新 001 期",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "TOKEN 打新",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/rwa-list/finance",
+    name: "finance",
+    selector: "text=Token 金融",
+    expectedText: "HNB 180天 Token权益认筹",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "Token 金融",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/rwa-list/staking",
+    name: "staking",
+    selector: "text=Staking",
+    expectedText: "HNB Staking 专区",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "Staking",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/rwa-list/brand-token",
+    name: "brand-token",
+    selector: "text=品牌Token专区",
+    expectedText: "品牌Token名称",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "品牌Token专区",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/hnb-pool",
+    name: "hnb-pool",
+    selector: "text=HNB矿池",
+    expectedText: "矿池品类",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "HNB矿池",
+    minHeroFontSize: 28
+  },
+  {
+    path: "/hnb-pool/my-pool",
+    name: "my-pool",
+    selector: "text=我的矿池",
+    expectedText: "正在挖矿",
+    expectedBackground: "rgb(7, 9, 13)",
+    heroText: "我的矿池",
     minHeroFontSize: 28
   }
 ];
@@ -107,7 +181,7 @@ async function verifyRoute(page, route) {
       (node.textContent || "").includes(routeConfig.expectedText)
     );
     const hero = Array.from(document.querySelectorAll("h1, h2")).find((node) =>
-      (node.textContent || "").includes(routeConfig.name === "home" ? "RWAXTOKEN" : "账号登录")
+      (node.textContent || "").includes(routeConfig.heroText)
     );
 
     return {

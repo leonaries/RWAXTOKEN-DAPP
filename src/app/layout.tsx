@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { WalletProvider } from "@/components/providers/WagmiProvider";
+import { SiteHeader } from "@/components/site-header";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
-        <WalletProvider>{children}</WalletProvider>
+        <WalletProvider>
+          <SiteHeader>{children}</SiteHeader>
+        </WalletProvider>
       </body>
     </html>
   );

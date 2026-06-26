@@ -6,6 +6,50 @@ const TOKEN_TYPE_KEY = "rwaxtoken_token_type";
 const TOKEN_EXPIRES_AT_KEY = "rwaxtoken_token_expires_at";
 const USER_KEY = "rwaxtoken_user";
 
+export function getAccessToken() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY) || window.localStorage.getItem("rwaxtoken_auth_token");
+}
+
+export function getAuthUser() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const rawUser = window.localStorage.getItem(USER_KEY);
+  if (!rawUser) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawUser) as OAuthUser;
+  } catch {
+    return null;
+  }
+}
+
+export function isAuthenticated() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const token = getAccessToken();
+  const expiresAt = window.localStorage.getItem(TOKEN_EXPIRES_AT_KEY);
+
+  if (!token) {
+    return false;
+  }
+
+  if (!expiresAt) {
+    return true;
+  }
+
+  return Number(expiresAt) > Date.now();
+}
+
 export function setTokenInfo(tokenInfo: OAuthTokenInfo) {
   if (typeof window === "undefined") {
     return;

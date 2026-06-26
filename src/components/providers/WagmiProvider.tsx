@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { WagmiProvider } from "wagmi";
 
 import { wagmiConfig } from "@/lib/web3/walletConnector";
+import { themeColors } from "@/config/theme";
 
 import "@rainbow-me/rainbowkit/styles.css";
 
@@ -45,13 +46,13 @@ export function WalletProvider({ children, queryClient: providedQueryClient }: W
   const rainbowKitTheme = useMemo(
     () => ({
       lightMode: lightTheme({
-        accentColor: "#34f56f",
-        accentColorForeground: "#07090d",
+        accentColor: themeColors.accent,
+        accentColorForeground: themeColors.accentForeground,
         borderRadius: "medium"
       }),
       darkMode: darkTheme({
-        accentColor: "#34f56f",
-        accentColorForeground: "#07090d",
+        accentColor: themeColors.accent,
+        accentColorForeground: themeColors.accentForeground,
         borderRadius: "medium"
       })
     }),
