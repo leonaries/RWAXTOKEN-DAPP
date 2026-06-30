@@ -29,15 +29,6 @@ const routes = [
     minHeroFontSize: 24
   },
   {
-    path: "/login",
-    name: "login",
-    selector: "text=账号登录",
-    expectedText: "邮箱登录",
-    expectedBackground: "rgb(252, 252, 253)",
-    heroText: "账号登录",
-    minHeroFontSize: 28
-  },
-  {
     path: "/market",
     name: "market",
     selector: "text=全部商品",

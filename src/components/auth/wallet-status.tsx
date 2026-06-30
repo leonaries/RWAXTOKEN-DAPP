@@ -1,7 +1,8 @@
 "use client";
 
-import { AppButton } from "@/components/app-button";
+import { LoginMethodModal } from "@/features/auth/login-method-modal";
 import { Wallet } from "lucide-react";
+import { useState } from "react";
 import { useAccount, useDisconnect } from "wagmi";
 
 function formatAddress(address: string) {
@@ -9,14 +10,22 @@ function formatAddress(address: string) {
 }
 
 export function WalletStatus() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
   if (!isConnected || !address) {
     return (
-      <AppButton href="/login" size="md">
-        链接/登陆
-      </AppButton>
+      <>
+        <button
+          className="inline-flex h-10 min-w-[142px] items-center justify-center rounded-full bg-white/[0.13] px-5 text-sm font-semibold text-white transition hover:bg-hnb hover:text-ink"
+          onClick={() => setIsLoginModalOpen(true)}
+          type="button"
+        >
+          链接/登陆
+        </button>
+        <LoginMethodModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      </>
     );
   }
 

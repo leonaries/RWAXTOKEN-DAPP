@@ -1,3 +1,5 @@
-import { LoginPage } from "@/features/auth/login-page";
+import { redirect } from "next/navigation";
 
-export default LoginPage;
+export default function LoginRoute() {
+  redirect("/");
+}

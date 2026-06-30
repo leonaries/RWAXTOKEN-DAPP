@@ -57,7 +57,7 @@ export function OAuthCallbackClient({
         setStatusMessage(message);
 
         window.setTimeout(() => {
-          router.push("/login");
+          router.push("/");
         }, 3000);
       }
     };
