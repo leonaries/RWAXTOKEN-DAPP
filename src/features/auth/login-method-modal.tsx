@@ -1,6 +1,5 @@
 "use client";
 
-import { WalletLoginModal } from "@/features/auth/wallet-login-modal";
 import type { LoginStatus } from "@/features/auth/login.types";
 import { useWalletConnection } from "@/hooks/web3";
 import { ArrowRight, CheckCircle2, Loader2, Mail, Send, ShieldCheck, Wallet, X } from "lucide-react";
@@ -30,13 +29,48 @@ const methodIconMap = {
 export function LoginMethodModal({ isOpen, onClose }: LoginMethodModalProps) {
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<"methods" | "email">("methods");
-  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [connectingWalletId, setConnectingWalletId] = useState<string>();
-  const { address, availableWallets, connect, isConnecting } = useWalletConnection();
+  const [isWalletAuthPending, setIsWalletAuthPending] = useState(false);
+  const [hasOpenedWalletModal, setHasOpenedWalletModal] = useState(false);
+  const { address, authenticateWallet, isConnected, isConnecting, openWalletModal } = useWalletConnection();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isWalletAuthPending || !isConnected || !address) {
+      return;
+    }
+
+    let isActive = true;
+
+    authenticateWallet(address).then((result) => {
+      if (!isActive) {
+        return;
+      }
+
+      setIsWalletAuthPending(false);
+      setHasOpenedWalletModal(false);
+
+      if (result.success) {
+        closeAll();
+        return;
+      }
+
+      window.alert(result.error || "钱包登录验证失败，请重试。");
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [address, authenticateWallet, isConnected, isWalletAuthPending]);
+
+  useEffect(() => {
+    if (isWalletAuthPending && hasOpenedWalletModal && !isConnecting && !isConnected) {
+      setIsWalletAuthPending(false);
+      setHasOpenedWalletModal(false);
+    }
+  }, [hasOpenedWalletModal, isConnecting, isConnected, isWalletAuthPending]);
 
   if (!mounted || !isOpen) {
     return null;
@@ -44,23 +78,26 @@ export function LoginMethodModal({ isOpen, onClose }: LoginMethodModalProps) {
 
   const closeAll = () => {
     setActiveView("methods");
-    setIsWalletModalOpen(false);
+    setIsWalletAuthPending(false);
+    setHasOpenedWalletModal(false);
     onClose();
   };
 
-  const connectWallet = async (walletId: string) => {
-    setConnectingWalletId(walletId);
-    const result = await connect(walletId);
-    setConnectingWalletId(undefined);
-
-    if (result.success) {
-      setIsWalletModalOpen(false);
-      onClose();
+  const handleWalletLogin = async () => {
+    if (isConnected && address) {
+      setIsWalletAuthPending(true);
       return;
     }
 
-    const errorMessage = result.error || (address ? "当前钱包已连接，请重试登录。" : "钱包连接被取消，请重试。");
-    window.alert(errorMessage);
+    const result = await openWalletModal();
+    if (result.success) {
+      setIsWalletAuthPending(true);
+      setHasOpenedWalletModal(true);
+      return;
+    }
+
+    setIsWalletAuthPending(false);
+    window.alert(result.error || "钱包弹窗打开失败，请重试。");
   };
 
   return createPortal(
@@ -68,26 +105,26 @@ export function LoginMethodModal({ isOpen, onClose }: LoginMethodModalProps) {
       <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/72 px-4 py-8 backdrop-blur-md">
         <button aria-label="关闭登录弹窗遮罩" className="absolute inset-0 cursor-default" onClick={closeAll} type="button" />
         <section
-          className={`relative z-10 max-h-[calc(100vh-48px)] w-full overflow-y-auto rounded-[30px] border border-white/18 bg-[#222523]/82 text-white shadow-2xl shadow-black/50 ring-1 ring-white/8 ${
-            activeView === "email" ? "max-w-[820px] p-6 sm:p-8" : "max-w-[820px] p-6 sm:p-8 lg:p-10"
+          className={`relative z-10 max-h-[calc(100vh-48px)] w-full overflow-y-auto rounded-[26px] border border-white/18 bg-[#222523]/82 text-white shadow-2xl shadow-black/50 ring-1 ring-white/8 ${
+            activeView === "email" ? "max-w-[760px] p-5 sm:p-7" : "max-w-[680px] p-5 sm:p-7"
           }`}
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(48,238,105,0.18),transparent_30%),radial-gradient(circle_at_80%_75%,rgba(35,174,247,0.16),transparent_32%)]" />
           <button
             aria-label="关闭登录弹窗"
-            className="absolute right-5 top-5 z-10 grid h-11 w-11 place-items-center rounded-full border-2 border-white bg-black/20 text-white transition hover:bg-hnb hover:text-ink"
+            className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full border-2 border-white bg-black/20 text-white transition hover:bg-hnb hover:text-ink"
             onClick={closeAll}
             type="button"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           </button>
 
           <div className="relative">
             {activeView === "methods" ? (
               <LoginMethodSelection
-                isConnecting={isConnecting}
+                isConnecting={isConnecting || isWalletAuthPending}
                 onEmail={() => setActiveView("email")}
-                onWallet={() => setIsWalletModalOpen(true)}
+                onWallet={handleWalletLogin}
               />
             ) : (
               <EmailLoginForm onCancel={closeAll} onSuccess={closeAll} />
@@ -95,15 +132,6 @@ export function LoginMethodModal({ isOpen, onClose }: LoginMethodModalProps) {
           </div>
         </section>
       </div>
-
-      <WalletLoginModal
-        connectingWalletId={connectingWalletId}
-        isConnecting={isConnecting}
-        isOpen={isWalletModalOpen}
-        onClose={() => setIsWalletModalOpen(false)}
-        onSelectWallet={connectWallet}
-        wallets={availableWallets}
-      />
     </>,
     document.body
   );
@@ -121,29 +149,29 @@ function LoginMethodCard({
   const content = (
     <>
       <span
-        className={`grid h-[82px] w-[82px] shrink-0 place-items-center rounded-[18px] ${
+        className={`grid h-[62px] w-[62px] shrink-0 place-items-center rounded-[14px] ${
           icon === "telegram"
             ? "bg-[#20a0df] text-white"
             : icon === "wallet"
               ? "bg-gradient-to-br from-[#16a5ff] to-[#2355ff] text-white"
-              : "bg-black text-white"
+          : "bg-black text-white"
         }`}
       >
-        <Icon className="h-10 w-10" />
+        <Icon className="h-8 w-8" />
       </span>
       <span className="min-w-0 flex-1">
-        <strong className="block text-left text-[24px] font-black leading-tight tracking-normal sm:text-[28px]">
+        <strong className="block text-left text-[20px] font-black leading-tight tracking-normal sm:text-[22px]">
           {label}
         </strong>
-        <span className="mt-3 block text-left text-sm leading-6 text-white/58 sm:text-base">{description}</span>
+        <span className="mt-2 block text-left text-[13px] leading-5 text-white/58 sm:text-sm">{description}</span>
       </span>
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/68 text-[#2c3135]">
-        {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <ArrowRight className="h-7 w-7" />}
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/68 text-[#2c3135]">
+        {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
       </span>
     </>
   );
 
-  const className = `group flex w-full items-center gap-5 rounded-[22px] bg-white/[0.13] px-5 py-5 text-white backdrop-blur transition ${
+  const className = `group flex w-full items-center gap-4 rounded-[18px] bg-white/[0.13] px-5 py-4 text-white backdrop-blur transition ${
     disabled
       ? "cursor-not-allowed opacity-55"
       : "hover:-translate-y-0.5 hover:bg-white/[0.19] hover:shadow-[0_18px_50px_rgba(0,0,0,0.25)]"
@@ -167,10 +195,10 @@ function LoginMethodSelection({
 }) {
   return (
     <>
-      <h2 className="text-center text-[28px] font-black leading-tight tracking-normal sm:text-[34px]">
+      <h2 className="text-center text-[24px] font-black leading-tight tracking-normal sm:text-[28px]">
         请选择登录方式
       </h2>
-      <div className="mt-7 space-y-4">
+      <div className="mt-6 space-y-3">
         <LoginMethodCard
           description="使用邮箱验证码登录进行注册登录，登录后可绑定钱包地址。"
           icon="email"
@@ -191,7 +219,7 @@ function LoginMethodSelection({
           onClick={onWallet}
         />
       </div>
-      <p className="mt-6 text-center text-sm font-semibold text-white/45">更多选择，敬请期待</p>
+      <p className="mt-5 text-center text-xs font-semibold text-white/45">更多选择，敬请期待</p>
     </>
   );
 }

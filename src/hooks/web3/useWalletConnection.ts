@@ -1,9 +1,10 @@
 "use client";
 
-import { getAllWallets } from "@/lib/web3";
+import "@/lib/web3/walletConnector";
+import { useAppKit, useAppKitState } from "@reown/appkit/react";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { useAccount, useConnect, useDisconnect, useSignMessage } from "wagmi";
+import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 
 type WalletLoginPayload = {
   address: string;
@@ -89,75 +90,35 @@ async function verifyWalletLogin(payload: WalletLoginPayload): Promise<WalletLog
 
 export function useWalletConnection() {
   const router = useRouter();
-  const { connectors, connectAsync, isPending } = useConnect();
+  const { open } = useAppKit();
+  const appKitState = useAppKitState();
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { disconnect, disconnectAsync } = useDisconnect();
-  const availableWallets = getAllWallets();
+  const { disconnect } = useDisconnect();
 
-  const getConnector = useCallback(
-    (walletId?: string) => {
-      const injectedConnector =
-        connectors.find((connector) => connector.id === "injected") ||
-        connectors.find((connector) => connector.name.toLowerCase().includes("injected"));
-      const walletConnectConnector = connectors.find((connector) =>
-        `${connector.id} ${connector.name}`.toLowerCase().includes("walletconnect")
-      );
+  const openWalletModal = useCallback(async (): Promise<WalletLoginResult> => {
+    try {
+      await open({ view: "Connect" });
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "钱包弹窗打开失败";
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  }, [open]);
 
-      if (!walletId) {
-        if (typeof window !== "undefined" && window.ethereum && injectedConnector) {
-          return injectedConnector;
-        }
-
-        return walletConnectConnector || injectedConnector || connectors[0];
-      }
-
-      const targetId = walletId.toLowerCase();
-      const matchedConnector = connectors.find((connector) => {
-        const connectorId = connector.id.toLowerCase();
-        const connectorName = connector.name.toLowerCase();
-
-        if (targetId === "metamask") {
-          return connectorId.includes("metamask") || connectorName.includes("metamask");
-        }
-        if (targetId === "coinbase") {
-          return connectorId.includes("coinbase") || connectorName.includes("coinbase");
-        }
-        if (targetId === "walletconnect") {
-          return connectorId.includes("walletconnect");
-        }
-
-        return connectorId.includes(targetId) || connectorName.includes(targetId);
-      });
-
-      return matchedConnector || injectedConnector || walletConnectConnector || connectors[0];
-    },
-    [connectors]
-  );
-
-  const connect = useCallback(
-    async (walletId?: string): Promise<WalletLoginResult & { address?: string }> => {
-      const connector = getConnector(walletId);
-
-      if (!connector) {
+  const authenticateWallet = useCallback(
+    async (walletAddress = address): Promise<WalletLoginResult & { address?: string }> => {
+      if (!walletAddress) {
         return {
           success: false,
-          error: "未检测到可用钱包，请先安装 MetaMask、OKX Wallet 或使用 WalletConnect。"
+          error: "未获取到钱包地址，请先连接钱包。"
         };
       }
 
       try {
-        if (isConnected) {
-          await disconnectAsync();
-        }
-
-        const result = await connectAsync({ connector });
-        const walletAddress = result.accounts[0];
-
-        if (!walletAddress) {
-          throw new Error("未获取到账户地址");
-        }
-
         const nonceResponse = await requestNonce(walletAddress);
         const signature = await signMessageAsync({
           account: walletAddress,
@@ -201,15 +162,15 @@ export function useWalletConnection() {
         };
       }
     },
-    [connectAsync, disconnect, disconnectAsync, getConnector, isConnected, router, signMessageAsync]
+    [address, disconnect, router, signMessageAsync]
   );
 
   return {
-    availableWallets,
-    isConnecting: isPending,
+    isConnecting: appKitState.loading || appKitState.open,
     isConnected,
     address,
-    connect,
+    authenticateWallet,
+    openWalletModal,
     disconnect
   };
 }

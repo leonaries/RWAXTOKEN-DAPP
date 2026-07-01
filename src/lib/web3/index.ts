@@ -1,8 +1,7 @@
 /**
  * Web3 钱包连接模块
- * 使用 Wagmi + RainbowKit
+ * 使用 Wagmi + Reown AppKit
  */
 
 export * from './walletConfig'
-export { wagmiConfig } from './walletConnector'
-
+export { initializeAppKit, wagmiConfig } from './walletConnector'

@@ -11,7 +11,8 @@
     "verify:app": "node scripts/verify-app.mjs"
   },
   "dependencies": {
-    "@rainbow-me/rainbowkit": "^2.2.11",
+    "@reown/appkit": "^1.8.21",
+    "@reown/appkit-adapter-wagmi": "^1.8.21",
     "@tanstack/react-query": "^5.101.1",
     "lucide-react": "0.468.0",
     "next": "15.3.9",

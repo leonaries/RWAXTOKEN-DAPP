@@ -1,19 +1,15 @@
 "use client";
 
-import { darkTheme, lightTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { WagmiProvider } from "wagmi";
 
-import { wagmiConfig } from "@/lib/web3/walletConnector";
-import { themeColors } from "@/config/theme";
-
-import "@rainbow-me/rainbowkit/styles.css";
+import { initializeAppKit, wagmiConfig } from "@/lib/web3/walletConnector";
 
 /**
- * Wagmi + RainbowKit 提供者
- * 自动处理所有钱包连接和冲突
+ * Wagmi + Reown AppKit 提供者
+ * AppKit 负责钱包弹窗，Wagmi 负责账户状态和签名。
  */
 
 interface WalletProviderProps {
@@ -25,6 +21,8 @@ interface WalletProviderProps {
 }
 
 export function WalletProvider({ children, queryClient: providedQueryClient }: WalletProviderProps) {
+  initializeAppKit();
+
   // 复用外部传入的 queryClient，避免重复实例；否则按默认配置创建一个
   const [queryClient] = useState(
     () =>
@@ -42,28 +40,9 @@ export function WalletProvider({ children, queryClient: providedQueryClient }: W
       })
   );
 
-  // RainbowKit 主题缓存，避免重复创建
-  const rainbowKitTheme = useMemo(
-    () => ({
-      lightMode: lightTheme({
-        accentColor: themeColors.accent,
-        accentColorForeground: themeColors.accentForeground,
-        borderRadius: "medium"
-      }),
-      darkMode: darkTheme({
-        accentColor: themeColors.accent,
-        accentColorForeground: themeColors.accentForeground,
-        borderRadius: "medium"
-      })
-    }),
-    []
-  );
-
   return (
     <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={rainbowKitTheme}>{children}</RainbowKitProvider>
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   );
 }
